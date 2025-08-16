@@ -51,7 +51,7 @@ app.post("/api/v1/signin", async (req, res) => {
   }
   const token = await jwt.sign(
     { userId: user._id },
-    process.env.JWT_SECRET || "asdfihjklqwertyuiopzxcvbnm1234567890",
+    process.env.JWT_SECRET || "adfihjklqwertyuiopzxcvbnm1234567890",
     {
       expiresIn: "1h",
     }
