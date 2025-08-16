@@ -1,5 +1,5 @@
 import mongoose, {model, Schema } from "mongoose";
-const connectDB = async () => {
+export const connectDB = async () => {
     try {
         await mongoose.connect(
             process.env.MONGODB_URI || "mongodb://localhost:27017/brainly"
@@ -32,8 +32,8 @@ const linkSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 
-
 export const User = model("User", userSchema);
 export const Content = model("Content", contentSchema);
 export const Tags = model("Tags", tagsSchema);
 export const Link = model("Link", linkSchema);
+ 
