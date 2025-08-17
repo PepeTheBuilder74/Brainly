@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 import express from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-dotenv.config();
-
+import { userMiddleware } from "./middleware.js";
 import { User, Content, Tags, Link, connectDB } from "./db.js";
+
 const app = express();
-
 await connectDB();
-
+dotenv.config();
 app.use(express.json());
+
 app.post("/api/v1/signup", async (req, res) => {
   const { username, password } = req.body;
 
@@ -58,30 +58,67 @@ app.post("/api/v1/signin", async (req, res) => {
   return res.status(200).json({ token, userId: user._id });
 });
 
-app.post("/api/v1/content", (req, res) => {
-
-
+app.post("/api/v1/content", userMiddleware, async (req, res) => {
+  const { title, link, type, tags } = req.body;
+  const userId = (req as any).user.userId;
+  if (!title || !userId) {
+    return res.status(400).json({ error: "Title and userId are required" });
+  }
+  try {
+    const tagIds = await Promise.all(
+      tags.map(async (tagName: string) => {
+        let cleanedTagName = tagName.trim().toLowerCase();
+        if (!cleanedTagName) {
+          return null;
+        }
+        let tag = await Tags.findOne({ name: cleanedTagName });
+        if (!tag) {
+          tag = new Tags({ name: cleanedTagName });
+          await tag.save();
+        }
+        return tag._id;
+      })
+    );
+    const filteredTagIds = tagIds.filter((id) => {
+      return id !== null;
+    });
+    const newContent = new Content({
+      title,
+      link,
+      type,
+      tags: filteredTagIds,
+      userId,
+    });
+    await newContent.save();
+    return res.status(201).json({ message: "Content created successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-app.get("/api/v1/content", (req, res) => {
-
-
+app.get("/api/v1/content",userMiddleware, async (req, res) => {
+  const userId = (req as any).user.userId;
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+  try {
+    const contents = await Content.find({ userId }).populate("tags","name");
+    if(!contents || contents.length === 0) {
+      return res.status(404).json({ error: "No content found for this user" });
+    }
+    return res.status(200).json(contents);
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-app.delete("/api/v1/delete", (req, res) => {
-
-
+app.delete("/api/v1/delete", async (req, res) => {
+   
 });
 
-app.post("/api/v1/brain/share", (req, res) => {
+app.post("/api/v1/brain/share", (req, res) => {});
 
-
-});
-
-app.get("/api/v1/brain/:shareLink", (req, res) => {
-
-
-});
+app.get("/api/v1/brain/:shareLink", (req, res) => {});
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

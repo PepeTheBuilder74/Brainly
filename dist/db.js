@@ -10,19 +10,18 @@ export const connectDB = async () => {
     }
 };
 const userSchema = new Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    username: { type: String, required: true, unique: true, index: true },
+    password: { type: String, required: true },
 });
 const tagsSchema = new Schema({
     name: { type: String, required: true, unique: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true }
 });
 const contentSchema = new Schema({
     title: { type: String, required: true },
     link: { type: String },
     type: { type: String },
     tags: [{ type: Schema.Types.ObjectId, ref: "Tags" }],
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true }
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 const linkSchema = new Schema({
     shareLink: { type: String, required: true, unique: true },

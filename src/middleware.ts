@@ -20,7 +20,7 @@ export const userMiddleware = (
       token,
       process.env.JWT_SECRET || "adfihjklqwertyuiopzxcvbnm1234567890"
     ) as { userId: string };
-    req.body.user = decoded.userId;
+    (req as any).user = decoded;
     next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid token" });
