@@ -102,16 +102,25 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 });
-app.delete("/api/v1/delete", async (req, res) => {
-    const { contentId } = req.body;
-    if (!contentId) {
-        return res.status(400).json({ error: "Content ID is required" });
+app.delete("/api/v1/content/:id", userMiddleware, async (req, res) => {
+    const contentId = req.params.id;
+    const userId = req.user.userId;
+    if (!contentId || !userId) {
+        return res
+            .status(400)
+            .json({ error: "Content ID and user ID are required" });
     }
     try {
-        const content = await Content.findByIdAndDelete(contentId);
+        const content = await Content.findById(contentId);
         if (!content) {
             return res.status(404).json({ error: "Content not found" });
         }
+        if (content.userId.toString() !== userId) {
+            return res
+                .status(403)
+                .json({ error: "You do not have permission to delete this content" });
+        }
+        await Content.findByIdAndDelete(contentId);
         return res.status(200).json({ message: "Content deleted successfully" });
     }
     catch (err) {

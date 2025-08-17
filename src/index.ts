@@ -96,14 +96,14 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/v1/content",userMiddleware, async (req, res) => {
+app.get("/api/v1/content", userMiddleware, async (req, res) => {
   const userId = (req as any).user.userId;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
   try {
-    const contents = await Content.find({ userId }).populate("tags","name");
-    if(!contents || contents.length === 0) {
+    const contents = await Content.find({ userId }).populate("tags", "name");
+    if (!contents || contents.length === 0) {
       return res.status(404).json({ error: "No content found for this user" });
     }
     return res.status(200).json(contents);
@@ -112,8 +112,29 @@ app.get("/api/v1/content",userMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/delete", async (req, res) => {
-   
+app.delete("/api/v1/content/:id", userMiddleware, async (req, res) => {
+  const contentId = req.params.id;
+  const userId = (req as any).user.userId;
+  if (!contentId || !userId) {
+    return res
+      .status(400)
+      .json({ error: "Content ID and user ID are required" });
+  }
+  try {
+    const content = await Content.findById(contentId);
+    if (!content) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+    if (content.userId.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to delete this content" });
+    }
+    await Content.findByIdAndDelete(contentId);
+    return res.status(200).json({ message: "Content deleted successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.post("/api/v1/brain/share", (req, res) => {});
