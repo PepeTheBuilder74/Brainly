@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import express from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
 dotenv.config();
 
 import { User, Content, Tags, Link, connectDB } from "./db.js";
@@ -59,12 +58,31 @@ app.post("/api/v1/signin", async (req, res) => {
   return res.status(200).json({ token, userId: user._id });
 });
 
-app.post("/api/v1/content", (req, res) => {});
+app.post("/api/v1/content", (req, res) => {
 
-app.get("/api/v1/content", (req, res) => {});
 
-app.delete("/api/v1/delete", (req, res) => {});
+});
 
-app.post("/api/v1/brain/share", (req, res) => {});
+app.get("/api/v1/content", (req, res) => {
 
-app.get("/api/v1/brain/:shareLink", (req, res) => {});
+
+});
+
+app.delete("/api/v1/delete", (req, res) => {
+
+
+});
+
+app.post("/api/v1/brain/share", (req, res) => {
+
+
+});
+
+app.get("/api/v1/brain/:shareLink", (req, res) => {
+
+
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
+});
