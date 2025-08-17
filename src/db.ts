@@ -17,7 +17,7 @@ const userSchema = new Schema({
 })
 const tagsSchema = new Schema({
     name: { type: String, required: true, unique: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true }
+    userId: { type: Schema.Types.ObjectId, ref: "Content", required: true }
 });
 const contentSchema = new Schema({
     title: { type: String, required: true },
