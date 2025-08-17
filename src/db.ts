@@ -12,12 +12,11 @@ export const connectDB = async () => {
 };
 
 const userSchema = new Schema({
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true,index : true },
     password: { type: String, required: true }
 })
 const tagsSchema = new Schema({
     name: { type: String, required: true, unique: true },
-    userId: { type: Schema.Types.ObjectId, ref: "Content", required: true }
 });
 const contentSchema = new Schema({
     title: { type: String, required: true },
