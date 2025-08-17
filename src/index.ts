@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { userMiddleware } from "./middleware.js";
 import { User, Content, Tags, Link, connectDB } from "./db.js";
-
+import { generateRandomString } from "./util.js";
 const app = express();
 await connectDB();
 dotenv.config();
@@ -137,9 +137,71 @@ app.delete("/api/v1/content/:id", userMiddleware, async (req, res) => {
   }
 });
 
-app.post("/api/v1/brain/share", (req, res) => {});
+app.post("/api/v1/share/user", userMiddleware, async (req, res) => {
+  const userId = (req as any).user.userId;
 
-app.get("/api/v1/brain/:shareLink", (req, res) => {});
+  try {
+    const existingLink = await Link.findOne({ userId: userId });
+    if (existingLink) {
+      const shareUrl = `${req.protocol}://${req.get("host")}/api/v1/brain/${
+        existingLink.shareLink
+      }`;
+      return res.status(200).json({ shareUrl: shareUrl });
+    }
+
+    const shareId = generateRandomString(16);
+
+    const newLink = new Link({
+      shareLink: shareId,
+      userId: userId,
+    });
+    await newLink.save();
+
+    const shareUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/brain/${shareId}`;
+    return res.status(201).json({ shareUrl: shareUrl });
+  } catch (err) {
+    console.error("Error creating user share link:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+app.get("/api/v1/brain/:shareLink", async (req, res) => {
+  const { shareLink } = req.params;
+
+  try {
+    const link = await Link.findOne({ shareLink: shareLink });
+    if (!link) {
+      return res
+        .status(404)
+        .json({ error: "Share link not found or has expired" });
+    }
+
+    const sharedContent = await Content.find({ userId: link.userId })
+      .populate("userId", "username")
+      .populate("tags", "name");
+
+    if (!sharedContent || sharedContent.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No shared content could be found for this link" });
+    }
+
+    const formattedContent = sharedContent.map((content) => ({
+      _id: content._id,
+      title: content.title,
+      link: content.link,
+      type: content.type,
+      tags: content.tags.map((tag) => (tag as any).name),
+      username: (content.userId as any).username,
+    }));
+
+    res.status(200).json(formattedContent);
+  } catch (error) {
+    console.error("Error fetching shared content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
